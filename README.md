@@ -322,7 +322,7 @@ Thank you to **Professor Silberman, Daniel, and Jose** for helping us throughout
 
 ## Course
 
-**UCSD MAE/ECE 148 â€” Introduction to Autonomous Vehicles**  
+**UCSD MAE/ECE 148 Introduction to Autonomous Vehicles**  
 **Summer Session II 2026**  
 **Team 1**
 
