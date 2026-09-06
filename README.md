@@ -249,29 +249,29 @@ The safety gate remains downstream of navigation and avoidance commands so that 
 ## Repository Structure
 
 ```text
-.
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ manta_localization/
-â”‚   â”‚   â””â”€â”€ GPS-IMU sensor-fusion ROS 2 package
-â”‚   â”‚
-â”‚   â””â”€â”€ manta_waypoint_navigation/
-â”‚       â””â”€â”€ GPS waypoint-navigation ROS 2 package
-â”‚
-â”œâ”€â”€ runtime/
-â”‚   â””â”€â”€ MANTA startup, arming, status, logging, and orchestration tools
-â”‚
-â”œâ”€â”€ experimental/
-â”‚   â””â”€â”€ Experimental cone-guidance, arbitration, and integration utilities
-â”‚
-â”œâ”€â”€ docs/
-â”‚   â”œâ”€â”€ architecture.md
-â”‚   â””â”€â”€ system_breakdown.md
-â”‚
-â”œâ”€â”€ media/
-â”‚   â””â”€â”€ Images, diagrams, and demonstration media
-â”‚
-â””â”€â”€ presentation/
-    â””â”€â”€ Final project presentation
+
+├── src/
+│   ├── manta_localization/
+│   │   └── GPS-IMU sensor-fusion ROS 2 package
+│   │
+│   └── manta_waypoint_navigation/
+│       └── GPS waypoint-navigation ROS 2 package
+│
+├── runtime/
+│   └── MANTA startup, arming, status, logging, and orchestration tools
+│
+├── experimental/
+│   └── Experimental cone-guidance, arbitration, and integration utilities
+│
+├── docs/
+│   ├── architecture.md
+│   └── system_breakdown.md
+│
+├── media/
+│   └── Images, diagrams, and demonstration media
+│
+└── presentation/
+    └── Final project presentation
 ```
 
 ---
