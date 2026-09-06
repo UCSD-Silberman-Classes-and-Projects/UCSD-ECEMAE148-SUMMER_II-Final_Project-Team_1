@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <b>Austin — MAE &nbsp;&nbsp; | &nbsp;&nbsp; Luis — MAE</b>
+  <b>Austin — Mechanical Engineering — aws001@ucsd.edu &nbsp;&nbsp; | &nbsp;&nbsp; Luis — Aerospace Engineering — luball@ucsd.edu</b>
 </p>
 
 ---
