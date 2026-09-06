@@ -1,0 +1,34 @@
+#!/bin/bash
+
+PIDDIR=/tmp/manta/pids
+
+echo "[MANTA] Stopping integrated runtime..."
+
+if [ ! -d "$PIDDIR" ]; then
+    echo "[MANTA] Nothing to stop."
+    exit 0
+fi
+
+for FILE in "$PIDDIR"/*.pid; do
+
+    [ -e "$FILE" ] || continue
+
+    NAME=$(basename "$FILE" .pid)
+    PID=$(cat "$FILE" 2>/dev/null)
+
+    if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+
+        echo "[MANTA] Stopping $NAME"
+
+        # Each component was started in its own process group.
+        kill -- "-$PID" 2>/dev/null || kill "$PID" 2>/dev/null || true
+
+    fi
+
+    rm -f "$FILE"
+
+done
+
+sleep 2
+
+echo "[MANTA] Integrated runtime stopped."

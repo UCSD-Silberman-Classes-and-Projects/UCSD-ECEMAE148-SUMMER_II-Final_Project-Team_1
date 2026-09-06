@@ -1,0 +1,345 @@
+#!/bin/bash
+
+
+ENV=/home/projects/ros2_ws/tools/manta_runtime/env.sh
+STOP=/home/projects/ros2_ws/tools/manta_runtime/manta-stop
+
+source "$ENV"
+
+# Current working yaw calibration.
+# This is only a launch-time parameter override.
+# It does NOT modify manta_localization source code.
+MANTA_YAW_OFFSET_DEG="${MANTA_YAW_OFFSET_DEG:-31.4}"
+
+
+echo
+echo "========================================"
+echo "       MANTA INTEGRATED STARTUP"
+echo "========================================"
+echo
+
+
+# --------------------------------------------------
+# DO NOT TOUCH EXISTING MANUAL RUNTIME
+# --------------------------------------------------
+
+EXISTING=$(
+    ros2 node list 2>/dev/null | grep -E \
+    '^/manta_lidar_adapter$|^/manta_safety_gate$|^/vesc_twist_node$|^/multi_cam_node$|^/nmea_navsat_driver$|^/bno08x_driver$|^/manta_gps_imu_ekf$|^/waypoint_controller$' \
+    || true
+)
+
+if [ -n "$EXISTING" ]; then
+
+    echo "[MANTA] STOP."
+    echo
+    echo "Existing MANTA nodes are already running:"
+    echo
+    echo "$EXISTING"
+    echo
+    echo "manta-up will NOT kill or modify them."
+    echo
+    echo "Shut down the current manual runtime first,"
+    echo "then run manta-up again."
+    exit 2
+
+fi
+
+
+rm -rf "$MANTA_PID_DIR"
+mkdir -p "$MANTA_PID_DIR"
+
+# Clear logs from previous integrated runs.
+rm -f "$MANTA_DIR"/lidar.log
+rm -f "$MANTA_DIR"/lidar_adapter.log
+rm -f "$MANTA_DIR"/oakd.log
+rm -f "$MANTA_DIR"/safety.log
+rm -f "$MANTA_DIR"/vesc.log
+rm -f "$MANTA_DIR"/gps.log
+rm -f "$MANTA_DIR"/imu.log
+rm -f "$MANTA_DIR"/localization.log
+rm -f "$MANTA_DIR"/waypoint.log
+rm -f "$MANTA_DIR"/reset.log
+
+
+# --------------------------------------------------
+# FUNCTIONS
+# --------------------------------------------------
+
+start_component()
+{
+    NAME="$1"
+    shift
+
+    COMMAND="$*"
+
+    LOG="$MANTA_DIR/${NAME}.log"
+    PIDFILE="$MANTA_PID_DIR/${NAME}.pid"
+
+    echo "[MANTA] Starting $NAME..."
+
+    setsid bash -lc "
+        source '$ENV'
+        exec $COMMAND
+    " > "$LOG" 2>&1 < /dev/null &
+
+    PID=$!
+
+    echo "$PID" > "$PIDFILE"
+
+    sleep 1
+
+    if ! kill -0 "$PID" 2>/dev/null; then
+
+        echo
+        echo "[MANTA] ERROR: $NAME failed to start."
+        echo
+
+        tail -30 "$LOG"
+
+        "$STOP"
+        exit 1
+
+    fi
+}
+
+
+wait_topic()
+{
+    TOPIC="$1"
+    MAX_WAIT="$2"
+
+    echo "[MANTA] Waiting for $TOPIC..."
+
+    for ((I=1; I<=MAX_WAIT; I++)); do
+
+        if timeout 2 ros2 topic echo "$TOPIC" --once \
+            >/dev/null 2>&1
+        then
+            echo "[MANTA] $TOPIC LIVE"
+            return 0
+        fi
+
+        sleep 1
+
+    done
+
+    echo "[MANTA] ERROR: $TOPIC has no data."
+    return 1
+}
+
+
+# ==================================================
+# HARDWARE / PERCEPTION / SAFETY SIDE
+# ==================================================
+
+echo
+echo "========== HARDWARE / SAFETY =========="
+echo
+
+
+# LD06 DRIVER
+start_component lidar \
+    "ros2 launch ucsd_robocar_sensor2_pkg lidar_ld06.launch.py"
+
+if ! wait_topic /scan 8; then
+    tail -30 "$MANTA_DIR/lidar.log"
+    "$STOP"
+    exit 1
+fi
+
+
+# EXISTING MANTA LIDAR ADAPTER
+start_component lidar_adapter \
+    "ros2 run ucsd_robocar_control2_pkg manta_lidar_adapter"
+
+if ! wait_topic /manta/lidar/heartbeat 6; then
+    tail -30 "$MANTA_DIR/lidar_adapter.log"
+    "$STOP"
+    exit 1
+fi
+
+
+# OAK-D
+start_component oakd \
+    "ros2 launch ucsd_robocar_sensor2_pkg camera_oakd.launch.py"
+
+if ! wait_topic /manta/vision/heartbeat 12; then
+    tail -30 "$MANTA_DIR/oakd.log"
+    "$STOP"
+    exit 1
+fi
+
+
+# EXISTING SAFETY GATE
+start_component safety \
+    "ros2 run ucsd_robocar_control2_pkg manta_safety_gate"
+
+
+# EXISTING VESC NODE
+#
+# IMPORTANT:
+# No parameters changed.
+# No configuration changed.
+# No calibration changed.
+# It is simply started exactly as-is.
+start_component vesc \
+    "ros2 run ucsd_robocar_actuator2_pkg vesc_twist_node"
+
+
+
+# ==================================================
+# LOCALIZATION / NAVIGATION SIDE
+# ==================================================
+
+echo
+echo "========== LOCALIZATION / NAVIGATION =========="
+echo
+
+
+# GPS
+start_component gps \
+    "ros2 run nmea_navsat_driver nmea_serial_driver \
+    --ros-args \
+    -p port:=/dev/ttyUSB1 \
+    -p baud:=38400 \
+    -p frame_id:=gps_link"
+
+if ! wait_topic /fix 8; then
+    tail -30 "$MANTA_DIR/gps.log"
+    "$STOP"
+    exit 1
+fi
+
+
+# BNO085
+start_component imu \
+    "ros2 launch bno08x_driver bno085_i2c.launch.py"
+
+if ! wait_topic /imu 8; then
+    tail -30 "$MANTA_DIR/imu.log"
+    "$STOP"
+    exit 1
+fi
+
+
+echo
+echo "[MANTA] Keep the car stationary."
+echo "[MANTA] Localization calibration starting."
+echo
+
+
+# LOCALIZATION
+start_component localization \
+    "ros2 run manta_localization gps_imu_fusion \
+    --ros-args \
+    -p imu_yaw_offset_deg:=$MANTA_YAW_OFFSET_DEG"
+
+sleep 5
+
+if ! wait_topic /manta/fused_odom 8; then
+    tail -30 "$MANTA_DIR/localization.log"
+    "$STOP"
+    exit 1
+fi
+
+
+# EXISTING TEAMMATE CONE AVOIDANCE NODES
+start_component lane_detection \
+    "ros2 run ucsd_robocar_lane_detection2_pkg lane_detection_node --ros-args -r /camera/color/image_raw:=/camera/color/image_0"
+
+sleep 2
+
+start_component avoidance_tick \
+    "python3 /home/projects/ros2_ws/tools/manta_runtime/manta_avoidance_tick.py"
+
+sleep 1
+
+start_component lane_guidance \
+    "ros2 run ucsd_robocar_lane_detection2_pkg lane_guidance_node --ros-args -r /centroid:=/manta/avoidance/control_tick -r /manta/lidar/nearest_distance_ft:=/cone/nearest_distance_calibrated_ft_0 -r /manta/nav/cmd_vel_raw:=/manta/nav/cmd_vel_avoidance"
+
+sleep 2
+
+
+# WAYPOINT CONTROLLER
+start_component waypoint \
+    "ros2 run manta_waypoint_navigation waypoint_controller --ros-args -r /manta/nav/cmd_vel_raw:=/manta/nav/cmd_vel_waypoint"
+
+echo "[MANTA] Waiting for waypoint_controller..."
+
+COUNT=0
+
+for I in $(seq 1 12); do
+    COUNT=$(
+        ros2 node list 2>/dev/null |
+        grep '^/waypoint_controller$' |
+        wc -l
+    )
+
+    if [ "$COUNT" -eq 1 ]; then
+        echo "[MANTA] waypoint_controller LIVE"
+        break
+    fi
+
+    if [ "$COUNT" -gt 1 ]; then
+        break
+    fi
+
+    sleep 1
+done
+
+
+# --------------------------------------------------
+# VERIFY EXACTLY ONE CONTROLLER
+# --------------------------------------------------
+
+if [ "$COUNT" -ne 1 ]; then
+
+    echo
+    echo "[MANTA] ERROR:"
+    echo "Expected exactly ONE waypoint_controller."
+    echo "Found: $COUNT"
+
+    "$STOP"
+    exit 1
+
+fi
+
+
+# --------------------------------------------------
+# MANTA INTEGRATION COMMAND ARBITER
+start_component cmd_arbiter \
+    "python3 /home/projects/ros2_ws/tools/manta_runtime/manta_cmd_arbiter.py"
+
+sleep 2
+
+
+# FORCE SAFE STANDBY
+# --------------------------------------------------
+
+ros2 param set /waypoint_controller drive_enabled false \
+    >/dev/null 2>&1 || true
+
+ros2 param set /waypoint_controller dry_run true \
+    >/dev/null 2>&1 || true
+
+
+echo
+echo "========================================"
+echo "              MANTA ONLINE"
+echo "========================================"
+echo
+echo "All components are connected."
+echo
+echo "Robot remains SAFE / DRY RUN."
+echo
+echo "The safety latch has NOT been cleared yet."
+echo
+echo "Next:"
+echo
+echo "    manta-status"
+echo
+echo "Then:"
+echo
+echo "    manta-arm"
+echo

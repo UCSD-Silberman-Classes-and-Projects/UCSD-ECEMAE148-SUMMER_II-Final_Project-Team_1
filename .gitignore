@@ -1,0 +1,43 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.bak
+
+# Python testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ROS 2 / colcon
+build/
+install/
+log/
+.colcon/
+
+# ROS bags
+*.db3
+*.mcap
+*.bag
+rosbags/
+
+# ML models / large binaries
+*.pt
+*.onnx
+*.blob
+*.tar.xz
+
+# Runtime logs
+*.log
+
+# Temporary / editor
+*.tmp
+*.swp
+*~
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

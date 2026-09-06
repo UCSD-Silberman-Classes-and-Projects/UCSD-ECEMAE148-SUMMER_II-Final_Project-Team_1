@@ -1,0 +1,89 @@
+#!/bin/bash
+
+source /home/projects/ros2_ws/tools/manta_runtime/env.sh
+
+echo
+echo "================ MANTA STATUS ================"
+
+
+echo
+echo "--- COMPONENTS ---"
+
+for NODE in \
+    manta_lidar_adapter \
+    multi_cam_node \
+    manta_safety_gate \
+    vesc_twist_node \
+    nmea_navsat_driver \
+    bno08x_driver \
+    manta_gps_imu_ekf \
+    waypoint_controller
+do
+
+    if ros2 node list 2>/dev/null | grep -q "^/$NODE$"; then
+        printf "%-25s LIVE\n" "$NODE"
+    else
+        printf "%-25s MISSING\n" "$NODE"
+    fi
+
+done
+
+
+echo
+echo "--- SENSOR DATA ---"
+
+for TOPIC in \
+    /scan \
+    /manta/lidar/heartbeat \
+    /manta/vision/heartbeat \
+    /fix \
+    /imu \
+    /manta/fused_odom
+do
+
+    if timeout 2 ros2 topic echo "$TOPIC" \
+        --once >/dev/null 2>&1
+    then
+        printf "%-30s LIVE\n" "$TOPIC"
+    else
+        printf "%-30s NO DATA\n" "$TOPIC"
+    fi
+
+done
+
+
+echo
+echo "--- CHAIN OF COMMAND ---"
+
+echo "/manta/nav/cmd_vel_raw"
+ros2 topic info /manta/nav/cmd_vel_raw 2>/dev/null |
+grep -E 'Publisher count|Subscription count'
+
+echo
+echo "/cmd_vel"
+ros2 topic info /cmd_vel 2>/dev/null |
+grep -E 'Publisher count|Subscription count'
+
+
+echo
+echo "--- WAYPOINT CONTROLLER ---"
+
+echo -n "Controller count: "
+ros2 node list 2>/dev/null |
+grep '^/waypoint_controller$' |
+wc -l
+
+ros2 param get /waypoint_controller drive_enabled \
+    2>/dev/null || true
+
+ros2 param get /waypoint_controller dry_run \
+    2>/dev/null || true
+
+
+echo
+echo "--- SAFETY ---"
+tail -8 /tmp/manta/safety.log 2>/dev/null || true
+
+
+echo
+echo "=============================================="

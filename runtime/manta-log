@@ -1,0 +1,32 @@
+#!/bin/bash
+
+NAME="${1:-}"
+
+if [ -z "$NAME" ]; then
+
+    echo "Usage:"
+    echo
+    echo "  manta-log lidar"
+    echo "  manta-log lidar_adapter"
+    echo "  manta-log oakd"
+    echo "  manta-log safety"
+    echo "  manta-log vesc"
+    echo "  manta-log gps"
+    echo "  manta-log imu"
+    echo "  manta-log localization"
+    echo "  manta-log waypoint"
+    exit 1
+
+fi
+
+
+FILE="/tmp/manta/${NAME}.log"
+
+if [ ! -f "$FILE" ]; then
+    echo "No log found:"
+    echo "$FILE"
+    exit 1
+fi
+
+
+tail -f "$FILE"

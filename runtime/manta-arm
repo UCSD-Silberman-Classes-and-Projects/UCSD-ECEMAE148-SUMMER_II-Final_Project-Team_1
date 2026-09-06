@@ -1,0 +1,82 @@
+#!/bin/bash
+
+source /home/projects/ros2_ws/tools/manta_runtime/env.sh
+
+echo
+echo "========== MANTA SAFETY ARM =========="
+echo
+
+echo "[MANTA] Checking OAK-D heartbeat..."
+
+HZ=$(timeout 4 ros2 topic hz /manta/vision/heartbeat 2>&1 || true)
+
+if ! echo "$HZ" | grep -q 'average rate:'; then
+    echo "[MANTA] REFUSED: OAK-D heartbeat missing."
+    exit 1
+fi
+
+echo "[MANTA] OAK-D heartbeat LIVE."
+
+echo "[MANTA] Checking vision state..."
+
+VISION=$(
+    timeout 3 ros2 topic echo \
+    /manta/vision/hazard_state \
+    2>/dev/null || true
+)
+
+STATE=$(
+    echo "$VISION" |
+    awk '/data:/{v=$2} END{print v}'
+)
+
+case "$STATE" in
+
+    0)
+        echo "[MANTA] Vision clear."
+        ;;
+
+    2)
+        echo "[MANTA] TWO CONES detected — maneuver mode permitted."
+        ;;
+
+    *)
+        echo "[MANTA] REFUSED: vision hazard state = ${STATE:-NO_DATA}"
+        exit 1
+        ;;
+esac
+
+echo "[MANTA] Requesting safety reset..."
+
+LOG=/tmp/manta/safety.log
+BEFORE=$(wc -l < "$LOG" 2>/dev/null || echo 0)
+
+ros2 topic pub --once \
+/manta/safety/reset \
+std_msgs/msg/Empty "{}" \
+>/tmp/manta/reset.log 2>&1
+
+sleep 1
+
+NEW=$(
+    tail -n +"$((BEFORE + 1))" "$LOG" 2>/dev/null || true
+)
+
+echo
+echo "=== SAFETY RESPONSE ==="
+echo "$NEW"
+
+if echo "$NEW" |
+   grep -Eq 'STOP RESET ACCEPTED|PASS'
+then
+    echo
+    echo "======================================"
+    echo "          MANTA ARMED — PASS"
+    echo "======================================"
+    exit 0
+fi
+
+echo
+echo "[MANTA] ARM FAILED:"
+tail -12 "$LOG"
+exit 1
