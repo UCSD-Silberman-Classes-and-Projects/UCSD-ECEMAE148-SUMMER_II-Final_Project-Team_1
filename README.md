@@ -274,6 +274,10 @@ See the final Team 1 presentation in:
 
 ---
 
+## Acknowledgements
+
+Thank you to **Professor Silberman, Daniel, and Jose** for helping us throughout the last five weeks. We greatly appreciate their guidance, support, and assistance throughout the development and integration of MANTA(ray).
+
 ## Course
 
 **UCSD MAE/ECE 148 — Introduction to Autonomous Vehicles**  
