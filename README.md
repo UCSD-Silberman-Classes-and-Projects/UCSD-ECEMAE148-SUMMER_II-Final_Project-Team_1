@@ -61,20 +61,20 @@
 
 | Goal | Final Status |
 |---|---|
-| GPS-IMU Sensor Fusion | âœ… Achieved |
-| Autonomous Point-to-Point Navigation | âœ… Achieved in semi-autonomous form |
-| OAK-D Lite YOLO Object Identification | âœ… Achieved |
-| OAK-D Lite Depth Calibration | âœ… Achieved |
-| Obstacle Avoidance Software | âœ… Implemented and partially integrated |
+| GPS-IMU Sensor Fusion | Achieved |
+| Autonomous Point-to-Point Navigation | Achieved in semi-autonomous form |
+| OAK-D Lite YOLO Object Identification | Achieved |
+| OAK-D Lite Depth Calibration | Achieved |
+| Obstacle Avoidance Software | Implemented and partially integrated |
 
 ### Reach Goals
 
 | Goal | Final Status |
 |---|---|
-| LiDAR Detection Emergency Stop | âœ… Incorporated into the obstacle-detection stack with OAK-D |
+| LiDAR Detection Emergency Stop | Incorporated into the obstacle-detection stack with OAK-D |
 | Multiple selectable pickup and destination locations | Not completed |
 | Simple taxi-request interface | Not completed |
-| Automatic continuation after an obstacle is removed | âœ… Achieved |
+| Automatic continuation after an obstacle is removed | Achieved |
 | Vehicle-speed-dependent LiDAR stopping distances | Not completed |
 | Improved route following / path-following controller | Not completed |
 | Dynamic obstacle avoidance rather than emergency stopping only | Not completed |
