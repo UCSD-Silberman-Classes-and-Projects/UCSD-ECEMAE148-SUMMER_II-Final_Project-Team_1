@@ -90,7 +90,7 @@ The GPS-IMU fusion stack successfully combined GPS and IMU data for vehicle loca
 
 Key results:
 - Maintained a constant output rate of approximately **100 Hz**
-- Achieved approximately **2â€“4 m localization accuracy**
+- Achieved approximately **2-4 m localization accuracy**
 - Successfully integrated the IMU into the vehicle stack
 
 ROS 2 package:
@@ -168,7 +168,7 @@ A major lesson from the project was that **subsystem functionality does not auto
 
 The preferred next architecture would use one explicit state machine:
 
-`GPS â†’ Gate Approach â†’ Visual Servo â†’ Clearance â†’ GPS`
+`GPS + Gate Approach + Visual Servo + Clearance + GPS`
 
 The system should also:
 
@@ -224,21 +224,22 @@ Documentation, data analysis, and the final presentation were developed in paral
 ## System Overview
 
 ```text
-GPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                   â”œâ”€â”€> GPS-IMU Fusion â”€â”€> Fused Localization
-BNO085 IMU â”€â”€â”€â”€â”€â”€â”€â”€â”˜                           â”‚
+GPS ───────────────┐
+                   ├──> GPS-IMU Fusion ──> Fused Localization
+BNO085 IMU ────────┘                           │
                                               v
                                      Waypoint Navigation
-                                              â”‚
+                                              │
                                               v
                                       Command Arbitration
-                                              â”‚
-OAK-D Lite â”€â”€> YOLO Detection â”€â”€> Avoidance â”€â”¤
-                                              â”‚
-LD06 LiDAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€> Safety Gate
-                                              â”‚
+                                              │
+OAK-D Lite ──> YOLO Detection ──> Avoidance ─┤
+                                              │
+LD06 LiDAR ───────────────────────────────────> Safety Gate
+                                              │
                                               v
                                       VESC / RoboCar
+
 ```
 
 The safety gate remains downstream of navigation and avoidance commands so that safety logic retains final authority over vehicle motion.
