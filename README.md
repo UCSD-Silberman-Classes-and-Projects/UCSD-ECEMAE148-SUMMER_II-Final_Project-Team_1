@@ -1,39 +1,80 @@
-# MANTA(ray)
+﻿<p align="center">
+  <img src="media/IMG_8101.jpeg" alt="MANTA(ray) RoboCar" width="700">
+</p>
 
-## A Multi-Sensor Autonomous Navigation & Transit Architecture
+<h1 align="center">MANTA(ray)</h1>
 
-**UC San Diego MAE/ECE 148 — Summer Session II 2026 — Team 1**
+<p align="center">
+  <b>A Multi-Sensor Autonomous Navigation & Transit Architecture</b>
+</p>
 
-**Project:** GPS-IMU Sensor Fusion RoboCar with Object Identification for Obstacle Avoidance
+<p align="center">
+  <b>UC San Diego MAE/ECE 148 — Summer Session II 2026 — Team 1</b>
+</p>
 
-**Team**
-- Austin — MAE
-- Luis — MAE
+<p align="center">
+  GPS-IMU Sensor Fusion RoboCar with Object Identification for Obstacle Avoidance
+</p>
 
-MANTA(ray) is a multi-sensor autonomous RoboCar project combining GPS-IMU sensor fusion, semi-autonomous point-to-point navigation, OAK-D Lite YOLO perception, LD06 LiDAR safety monitoring, and obstacle-avoidance software.
+<p align="center">
+  <b>Austin — MAE &nbsp;&nbsp; | &nbsp;&nbsp; Luis — MAE</b>
+</p>
 
 ---
 
+## Demonstration
+
+### Two-Cone Guidance
+
+<table>
+  <tr>
+    <td align="center"><b>Successful Two-Cone Guidance</b></td>
+    <td align="center"><b>Integrated Stack Failure Case</b></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="media/IMG_8104.gif" alt="Successful two-cone guidance maneuver" width="360">
+    </td>
+    <td align="center">
+      <img src="media/IMG_8126.gif" alt="Integrated-stack two-cone guidance failure" width="360">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <sub>IMG_8104 — MANTA(ray) successfully performing the two-cone guidance maneuver.</sub>
+    </td>
+    <td align="center">
+      <sub>IMG_8126 — the integrated stack failing to reliably complete the same two-cone guidance maneuver.</sub>
+    </td>
+  </tr>
+</table>
+
+### Original Video Files
+
+- [Successful two-cone guidance — IMG_8104.mov](media/IMG_8104.mov)
+- [Integrated-stack failure — IMG_8126.mov](media/IMG_8126.mov)
+
+---
 ## Project Goals and Final Status
 
 ### Must-Haves
 
 | Goal | Final Status |
 |---|---|
-| GPS-IMU Sensor Fusion | ✅ Achieved |
-| Autonomous Point-to-Point Navigation | ✅ Achieved in semi-autonomous form |
-| OAK-D Lite YOLO Object Identification | ✅ Achieved |
-| OAK-D Lite Depth Calibration | ✅ Achieved |
-| Obstacle Avoidance Software | ✅ Implemented and partially integrated |
+| GPS-IMU Sensor Fusion | âœ… Achieved |
+| Autonomous Point-to-Point Navigation | âœ… Achieved in semi-autonomous form |
+| OAK-D Lite YOLO Object Identification | âœ… Achieved |
+| OAK-D Lite Depth Calibration | âœ… Achieved |
+| Obstacle Avoidance Software | âœ… Implemented and partially integrated |
 
 ### Reach Goals
 
 | Goal | Final Status |
 |---|---|
-| LiDAR Detection Emergency Stop | ✅ Incorporated into the obstacle-detection stack with OAK-D |
+| LiDAR Detection Emergency Stop | âœ… Incorporated into the obstacle-detection stack with OAK-D |
 | Multiple selectable pickup and destination locations | Not completed |
 | Simple taxi-request interface | Not completed |
-| Automatic continuation after an obstacle is removed | ✅ Achieved |
+| Automatic continuation after an obstacle is removed | âœ… Achieved |
 | Vehicle-speed-dependent LiDAR stopping distances | Not completed |
 | Improved route following / path-following controller | Not completed |
 | Dynamic obstacle avoidance rather than emergency stopping only | Not completed |
@@ -49,7 +90,7 @@ The GPS-IMU fusion stack successfully combined GPS and IMU data for vehicle loca
 
 Key results:
 - Maintained a constant output rate of approximately **100 Hz**
-- Achieved approximately **2–4 m localization accuracy**
+- Achieved approximately **2â€“4 m localization accuracy**
 - Successfully integrated the IMU into the vehicle stack
 
 ROS 2 package:
@@ -127,7 +168,7 @@ A major lesson from the project was that **subsystem functionality does not auto
 
 The preferred next architecture would use one explicit state machine:
 
-`GPS → Gate Approach → Visual Servo → Clearance → GPS`
+`GPS â†’ Gate Approach â†’ Visual Servo â†’ Clearance â†’ GPS`
 
 The system should also:
 
@@ -183,19 +224,19 @@ Documentation, data analysis, and the final presentation were developed in paral
 ## System Overview
 
 ```text
-GPS ───────────────┐
-                   ├──> GPS-IMU Fusion ──> Fused Localization
-BNO085 IMU ────────┘                           │
+GPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                   â”œâ”€â”€> GPS-IMU Fusion â”€â”€> Fused Localization
+BNO085 IMU â”€â”€â”€â”€â”€â”€â”€â”€â”˜                           â”‚
                                               v
                                      Waypoint Navigation
-                                              │
+                                              â”‚
                                               v
                                       Command Arbitration
-                                              │
-OAK-D Lite ──> YOLO Detection ──> Avoidance ─┤
-                                              │
-LD06 LiDAR ───────────────────────────────────> Safety Gate
-                                              │
+                                              â”‚
+OAK-D Lite â”€â”€> YOLO Detection â”€â”€> Avoidance â”€â”¤
+                                              â”‚
+LD06 LiDAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€> Safety Gate
+                                              â”‚
                                               v
                                       VESC / RoboCar
 ```
@@ -208,28 +249,28 @@ The safety gate remains downstream of navigation and avoidance commands so that 
 
 ```text
 .
-├── src/
-│   ├── manta_localization/
-│   │   └── GPS-IMU sensor-fusion ROS 2 package
-│   │
-│   └── manta_waypoint_navigation/
-│       └── GPS waypoint-navigation ROS 2 package
-│
-├── runtime/
-│   └── MANTA startup, arming, status, logging, and orchestration tools
-│
-├── experimental/
-│   └── Experimental cone-guidance, arbitration, and integration utilities
-│
-├── docs/
-│   ├── architecture.md
-│   └── system_breakdown.md
-│
-├── media/
-│   └── Images, diagrams, and demonstration media
-│
-└── presentation/
-    └── Final project presentation
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ manta_localization/
+â”‚   â”‚   â””â”€â”€ GPS-IMU sensor-fusion ROS 2 package
+â”‚   â”‚
+â”‚   â””â”€â”€ manta_waypoint_navigation/
+â”‚       â””â”€â”€ GPS waypoint-navigation ROS 2 package
+â”‚
+â”œâ”€â”€ runtime/
+â”‚   â””â”€â”€ MANTA startup, arming, status, logging, and orchestration tools
+â”‚
+â”œâ”€â”€ experimental/
+â”‚   â””â”€â”€ Experimental cone-guidance, arbitration, and integration utilities
+â”‚
+â”œâ”€â”€ docs/
+â”‚   â”œâ”€â”€ architecture.md
+â”‚   â””â”€â”€ system_breakdown.md
+â”‚
+â”œâ”€â”€ media/
+â”‚   â””â”€â”€ Images, diagrams, and demonstration media
+â”‚
+â””â”€â”€ presentation/
+    â””â”€â”€ Final project presentation
 ```
 
 ---
@@ -280,6 +321,7 @@ Thank you to **Professor Silberman, Daniel, and Jose** for helping us throughout
 
 ## Course
 
-**UCSD MAE/ECE 148 — Introduction to Autonomous Vehicles**  
+**UCSD MAE/ECE 148 â€” Introduction to Autonomous Vehicles**  
 **Summer Session II 2026**  
 **Team 1**
+
